@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.ipynb_checkpoints/
+*.egg-info/
+
+# Environments
+.env
+.venv/
+venv/
+env/
+.conda/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Raw and processed data
+raw_data/
+data/
+outputs/
+logs/
+
+# Large files
+*.parquet
+*.csv
+*.pkl
+*.pickle
+*.joblib
+*.npz
+*.npy
+*.pdf
+
+# Model weights / checkpoints
+weights/*.h5
+weights/*.hdf5
+*.pt
+*.pth
+*.onnx
+
+# Figures
+*.png
+*.jpg
+*.jpeg
+*.pdf
+
+# Notebook checkpoints / local scratch
+scratch/
+tmp/
+temp/
+
