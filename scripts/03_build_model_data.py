@@ -97,8 +97,6 @@ def keep_model_columns(df):
             c.endswith("_mean")
             or c.endswith("_max")
             or c in {
-                "nima_aesthetic",
-                "nima_technical",
                 "person_present_any",
                 "single_object_share",
                 "mean_conf_mean",

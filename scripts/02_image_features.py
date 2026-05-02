@@ -31,7 +31,7 @@ from src.utils import ensure_dir
 from src.neural_representations import ResNetFeatureExtractor, aggregate_resnet_vectors
 from src.product_features import add_product_features, load_product_meta_filtered
 from src.semantic_layout import YoloScorer, aggregate_yolo_features
-from src.visual_quality import NimaScorer, extract_visual_quality_table
+from src.visual_quality import extract_visual_quality_table
 
 
 def parse_args():
@@ -58,9 +58,6 @@ def parse_args():
     parser.add_argument("--clip-model", default="ViT-B-32")
     parser.add_argument("--clip-pretrained", default="laion2b_s34b_b79k")
     parser.add_argument("--cache-dir", default=None)
-
-    parser.add_argument("--nima-aesthetic-weights", default=None)
-    parser.add_argument("--nima-technical-weights", default=None)
 
     parser.add_argument("--sample-n", type=int, default=None, help="Optional small sample for testing.")
     parser.add_argument("--seed", type=int, default=42)
@@ -355,16 +352,9 @@ def main():
     )
 
     print("Extracting visual quality features...")
-    nima_scorer = None
-    if args.nima_aesthetic_weights and args.nima_technical_weights:
-        nima_scorer = NimaScorer(
-            aesthetic_weights=args.nima_aesthetic_weights,
-            technical_weights=args.nima_technical_weights,
-        )
 
     quality_img_df = extract_visual_quality_table(
         review_img_df,
-        nima_scorer=nima_scorer,
         workers=args.workers,
         max_inflight=args.max_inflight,
         timeout=args.timeout,

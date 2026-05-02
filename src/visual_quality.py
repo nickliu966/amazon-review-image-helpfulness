@@ -1,5 +1,4 @@
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
-from pathlib import Path
 from typing import Optional
 
 import cv2
@@ -200,63 +199,6 @@ def visual_quality_features(rgb: np.ndarray) -> dict:
     return features
 
 
-class NimaScorer:
-    """
-    NIMA aesthetic and technical scores.
-    """
-
-    def __init__(self, aesthetic_weights, technical_weights, device: str = "/GPU:0"):
-        import tensorflow as tf
-        from tensorflow.keras import Model, layers
-        from tensorflow.keras.applications.mobilenet import MobileNet
-
-        self.tf = tf
-        self.device = device
-
-        def build_model(weights_path):
-            base = MobileNet(include_top=False, weights="imagenet", pooling="avg")
-            x = layers.Dropout(0.75)(base.output)
-            out = layers.Dense(10, activation="softmax", name="nima_scores")(x)
-            model = Model(inputs=base.input, outputs=out)
-            model.load_weights(weights_path)
-            return model
-
-        self.aesthetic_model = build_model(aesthetic_weights)
-        self.technical_model = build_model(technical_weights)
-
-        _ = self.aesthetic_model(tf.zeros((1, 224, 224, 3), dtype=tf.float32), training=False)
-        _ = self.technical_model(tf.zeros((1, 224, 224, 3), dtype=tf.float32), training=False)
-
-    @staticmethod
-    def _mean_score(prob) -> float:
-        prob = np.asarray(prob, dtype=np.float32).reshape(-1)
-        prob = prob / (prob.sum() + EPS)
-        scores = np.arange(1, 11, dtype=np.float32)
-        return float((prob * scores).sum())
-
-    @staticmethod
-    def prepare_image(rgb: np.ndarray) -> np.ndarray:
-        from tensorflow.keras.applications.mobilenet import preprocess_input
-
-        image = cv2.resize(rgb, (224, 224), interpolation=cv2.INTER_AREA)
-        return preprocess_input(image.astype(np.float32))
-
-    def score_batch(self, rgb_images: list[np.ndarray]) -> pd.DataFrame:
-        if not rgb_images:
-            return pd.DataFrame()
-
-        x = np.stack([self.prepare_image(rgb) for rgb in rgb_images]).astype(np.float32)
-
-        with self.tf.device(self.device):
-            aesthetic_prob = self.aesthetic_model(x, training=False).numpy()
-            technical_prob = self.technical_model(x, training=False).numpy()
-
-        return pd.DataFrame({
-            "nima_aesthetic_mean": [self._mean_score(p) for p in aesthetic_prob],
-            "nima_technical_mean": [self._mean_score(p) for p in technical_prob],
-        })
-
-
 def _prepare_quality_row(row, timeout: int, max_side: int):
     rgb = load_rgb_image(row.image_src, timeout=timeout)
     if rgb is None:
@@ -276,43 +218,20 @@ def _prepare_quality_row(row, timeout: int, max_side: int):
         **features,
     }
 
-    return out, rgb
+    return out
 
 
 def extract_visual_quality_table(
     review_img_df: pd.DataFrame,
-    nima_scorer: Optional[NimaScorer] = None,
     workers: int = 32,
     max_inflight: int = 128,
-    nima_batch_size: int = 128,
     timeout: int = 8,
     max_side: int = 512,
 ) -> pd.DataFrame:
     """
-    Extract visual quality, NIMA, and bokeh features at image level.
+    Extract visual quality and bokeh features at image level.
     """
     rows = []
-    pending_rows = []
-    pending_images = []
-
-    def flush_nima():
-        if not pending_rows:
-            return
-
-        if nima_scorer is None:
-            for r in pending_rows:
-                r["nima_aesthetic_mean"] = np.nan
-                r["nima_technical_mean"] = np.nan
-        else:
-            scores = nima_scorer.score_batch(pending_images)
-            for r, (_, score_row) in zip(pending_rows, scores.iterrows()):
-                r["nima_aesthetic_mean"] = score_row["nima_aesthetic_mean"]
-                r["nima_technical_mean"] = score_row["nima_technical_mean"]
-
-        rows.extend(pending_rows)
-        pending_rows.clear()
-        pending_images.clear()
-
     row_iter = review_img_df.itertuples(index=False)
 
     with ThreadPoolExecutor(max_workers=workers) as ex:
@@ -334,12 +253,7 @@ def extract_visual_quality_table(
                 result = fut.result()
 
                 if result is not None:
-                    row_out, rgb = result
-                    pending_rows.append(row_out)
-                    pending_images.append(rgb)
-
-                    if len(pending_rows) >= nima_batch_size:
-                        flush_nima()
+                    rows.append(result)
 
                 pbar.update(1)
 
@@ -350,8 +264,6 @@ def extract_visual_quality_table(
                     pass
 
         pbar.close()
-
-    flush_nima()
 
     return pd.DataFrame(rows)
 
@@ -370,18 +282,13 @@ def aggregate_visual_quality(image_quality_df: pd.DataFrame) -> pd.DataFrame:
         "fg_sharp_varlap": ["mean", "max"],
         "bg_sharp_varlap": ["mean", "max"],
         "bokeh_ratio": ["mean", "max"],
-        "bg_blur_invvar": ["mean", "max"],
-        "nima_aesthetic_mean": "mean",
-        "nima_technical_mean": "mean",
+        "bg_blur_invvar": ["mean", "max"]
     }
 
     out = image_quality_df.groupby("review_id").agg(agg_spec)
+
     out.columns = [
-        "image_count" if col[0] == "image_src" else (
-            "nima_aesthetic" if col[0] == "nima_aesthetic_mean" else
-            "nima_technical" if col[0] == "nima_technical_mean" else
-            f"{col[0]}_{col[1]}"
-        )
+        "image_count" if col[0] == "image_src" else f"{col[0]}_{col[1]}"
         for col in out.columns
     ]
 

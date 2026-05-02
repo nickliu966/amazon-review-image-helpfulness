@@ -90,11 +90,6 @@ def feature_blocks_from_columns(df: pd.DataFrame) -> dict:
         "bg_blur_invvar_max",
     ]
 
-    deep_scalar_visual_cols = [
-        "nima_aesthetic",
-        "nima_technical",
-    ]
-
     semantic_layout_cols = [
         "object_count_mean",
         "object_count_max",
@@ -116,7 +111,6 @@ def feature_blocks_from_columns(df: pd.DataFrame) -> dict:
         "text_review_meta_cols": [c for c in text_review_meta_cols if c in df.columns],
         "product_meta_cols": [c for c in product_meta_cols if c in df.columns],
         "hand_engineered_visual_cols": [c for c in hand_engineered_visual_cols if c in df.columns],
-        "deep_scalar_visual_cols": [c for c in deep_scalar_visual_cols if c in df.columns],
         "semantic_layout_cols": [c for c in semantic_layout_cols if c in df.columns],
         "cross_modal_similarity_cols": [c for c in cross_modal_similarity_cols if c in df.columns],
         "image_presence_cols": [c for c in ["any_image", "image_count"] if c in df.columns],
