@@ -280,30 +280,6 @@ For quick development runs, use smaller values such as:
 
 ---
 
-## HPC Usage
-
-The `hpc/` folder contains example Slurm scripts for running models on Midway3.
-
-Submit a job:
-
-```bash
-sbatch hpc/run_image_representation_models.sbatch
-```
-
-Check job status:
-
-```bash
-squeue -u $USER
-```
-
-Check memory usage after completion:
-
-```bash
-sacct -j JOBID --format=JobID,JobName,State,Elapsed,ReqMem,MaxRSS,AveRSS
-```
-
----
-
 ## Outputs
 
 Main outputs include:
