@@ -40,12 +40,10 @@ YOUR_PROJECT_FOLDER_NAME/
     07_figures.py
     09_visual_sanity_check.py
 
-  hpc/
-    run_presence_models.sbatch
-    run_image_representation_models.sbatch
 
   README.md
   requirements.txt
+  .gitignore
 
   Generated data, model outputs, logs, figures, and model weights are not tracked in Git.
 
@@ -276,30 +274,6 @@ For quick development runs, use smaller values such as:
 --n-low-pcs 2
 --n-high-pcs 2
 --n-param-samples 2
-```
-
----
-
-## HPC Usage
-
-The `hpc/` folder contains example Slurm scripts for running models on Midway3.
-
-Submit a job:
-
-```bash
-sbatch hpc/run_image_representation_models.sbatch
-```
-
-Check job status:
-
-```bash
-squeue -u $USER
-```
-
-Check memory usage after completion:
-
-```bash
-sacct -j JOBID --format=JobID,JobName,State,Elapsed,ReqMem,MaxRSS,AveRSS
 ```
 
 ---
