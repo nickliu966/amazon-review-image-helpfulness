@@ -1,6 +1,6 @@
 # amazon-review-image-helpfulness
 
-This repository contains the code for a master's thesis project on how user-generated review images contribute to online review helpfulness. The project compares multiple image representation families within a common predictive framework:
+This repository contains the code for thesis project on how user-generated review images contribute to online review helpfulness. The project compares multiple image representation families within a common predictive framework:
 
 1. Interpretable visual quality and photographic descriptors  
 2. Object-detection-based semantic and layout features  
@@ -44,8 +44,9 @@ YOUR_PROJECT_FOLDER_NAME/
   README.md
   requirements.txt
   .gitignore
+```
 
-  Generated data, model outputs, logs, figures, and model weights are not tracked in Git.
+Generated data, model outputs, logs, figures, and model weights are not tracked in Git.
 
 ---
 
