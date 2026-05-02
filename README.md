@@ -40,12 +40,10 @@ YOUR_PROJECT_FOLDER_NAME/
     07_figures.py
     09_visual_sanity_check.py
 
-  hpc/
-    run_presence_models.sbatch
-    run_image_representation_models.sbatch
 
   README.md
   requirements.txt
+  .gitignore
 
   Generated data, model outputs, logs, figures, and model weights are not tracked in Git.
 
